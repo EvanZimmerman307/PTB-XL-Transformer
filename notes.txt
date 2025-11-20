@@ -1,0 +1,70 @@
+Model Architecture up to exp 4:
+self.cnn = nn.Sequential(
+            nn.Conv1d(input_dim, 64, kernel_size=7, stride=2, padding=3, bias=False),
+            nn.BatchNorm1d(64),
+            nn.ReLU(inplace=True),
+            nn.Conv1d(64, d_model, kernel_size=3, stride=2, padding=1, bias=False),
+            nn.BatchNorm1d(d_model),
+            nn.ReLU(inplace=True),
+        )
+
+
+Changed for Exp 8 (trying attention pooling)
+Getting rid of:
+# --- Classification head ---
+        self.head = nn.Sequential(
+            nn.AdaptiveAvgPool1d(1),
+            nn.Flatten(),
+            nn.Dropout(dropout),
+            nn.Linear(d_model, num_classes)
+        )
+Also changing the forward pass from this:
+def forward(self, x):                 # x: (B, C, L)
+        x = self.cnn(x)                   # -> (B, D, L') L' is modified by stride
+        x = x.transpose(1, 2)             # -> (B, seq_len, d_model)
+        x = self.positional_encoding(x)   # -> (B, seq_len, d_model), Experiment 3 & 7
+        x = self.transformer(x)           # -> (B, L', D)
+
+        
+        x = x.transpose(1, 2)             # -> (B, D, L')
+        return self.head(x)
+
+
+Experiment 10: Adding Resnet and removing CNN, no positional, no attention pooling
+Old CNN:
+# --- CNN backbone ---
+        self.cnn = nn.Sequential(
+            nn.Conv1d(input_dim, 64, kernel_size=7, stride=2, padding=3, bias=False),
+            nn.BatchNorm1d(64),
+            nn.ReLU(inplace=True),
+            nn.Conv1d(64, 128, kernel_size=5, stride=1, padding=2, bias=False),  # Added layer
+            nn.BatchNorm1d(128),
+            nn.ReLU(inplace=True),
+            nn.MaxPool1d(kernel_size=3, stride=2, padding=1),  # 2x downsample
+            nn.Conv1d(128, d_model, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm1d(d_model),
+            nn.ReLU(inplace=True),
+        )
+Also removing:
+ # Attention pooling
+        attn_weights = F.softmax(self.attention_pool(x), dim=1)  # (B, L, 1)
+        x = (x * attn_weights).sum(dim=1)  # (B, D)
+
+        return self.classifier(x)
+AND 
+
+# --- Classification head (attention pooling) ---
+        self.attention_pool = nn.Linear(d_model, 1)
+        self.classifier = nn.Sequential(
+            nn.Dropout(dropout),
+            nn.Linear(d_model, num_classes)
+        )
+
+Experiment 11
+- Dropout 0.4 -> 0.5
+- Remove one of the 64 channel resnet blocks (3 -> 2 resnet blocks)
+- Add dropout 0.2 in between resnet blocks
+
+Experiment 12
+-  d_model=128 -> 256
+-  num_layers=2 -> 3
