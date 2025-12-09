@@ -21,8 +21,10 @@ def load_dataset(path: str, release:bool = False) -> tuple[np.array, pd.DataFram
 
 def load_raw_data_ptbxl(df: pd.DataFrame, path: str) -> np.array:
     if os.path.exists(path + 'raw100.npy'):
+        print("Loading raw numpy data")
         data = np.load(path+'raw100.npy', allow_pickle=True)
     else:
+        print("Creating and saving raw numpy data")
         data = [wfdb.rdsamp(path+f) for f in tqdm.tqdm(df.filename_lr)]
         data = np.array([signal for signal, meta in data])
         pickle.dump(data, open(path+'raw100.npy', 'wb'), protocol=4)
