@@ -1,6 +1,6 @@
 # PTB-XL Transformer
 
-An ECG classification project using transformer-based deep learning models for multi-label diagnosis on the [PTB-XL dataset](https://physionet.org/content/ptb-xl/1.0.3/).
+An ECG classification research project for the University of Michigan CAD-AI lab under the supervision of Dr. Chuan Zhou. This project explores transformer-based deep learning models for multi-label diagnosis on the [PTB-XL dataset](https://physionet.org/content/ptb-xl/1.0.3/).
 
 ## 📋 Table of Contents
 - [Overview](#overview)
